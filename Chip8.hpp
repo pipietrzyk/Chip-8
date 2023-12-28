@@ -9,6 +9,22 @@ const unsigned int REGISTER_COUNT = 16;
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int STACK_SIZE = 16;
 
+// Used for the debug() function
+const uint16_t D_OP = 0b1000000000000;                      // Show opcode
+const uint16_t D_PC = 0b0100000000000;                      // Show PC
+const uint16_t D_MEM_ALL = 0b0010000000000;                 // Show memory from 0x000 to 0xFFF -- also shows I and PC as well
+const uint16_t D_MEM_FONTS = 0b0000000000010;               // Show memory from 0x000 to 0x1FF -- also shows I and PC as well
+const uint16_t D_MEM_ROM = 0b0000000000001;                 // Show memory from 0x200 to 0xFFF -- also shows I and PC as well
+const uint16_t D_SP = 0b0001000000000;                      // Show SP
+const uint16_t D_STACK = 0b0000100000000;                   // Show stack (and SP)
+const uint16_t D_I = 0b0000010000000;                       // Show index register
+const uint16_t D_V = 0b0000001000000;                       // Show registers
+const uint16_t D_VID = 0b0000000100000;                     // Show a representation of the video
+const uint16_t D_KEYS = 0b0000000010000;                    // Show which keys were pressed
+const uint16_t D_DT = 0b0000000001000;                      // Show delay timer
+const uint16_t D_ST = 0b0000000000100;                      // Show sound timer
+const uint16_t D_ALL = 0b1111111111111;                     // Show everything
+
 
 class Chip8 {
     public:
@@ -16,7 +32,9 @@ class Chip8 {
 
         void emulateCycle();                                // Emulates one cycle of the CPU (60 cycles per second)
 		bool loadROM(const char * filename);                // Loads a ROM into the program memory (starting at 0x200)
-        void debug();                                       // Prints out the current states of all the class variables
+
+        void debug(uint16_t bitmask);                       // Prints out the current states of class variables
+                                                            // A bitmask is used to select which variables should be output
 
         uint8_t keypad[KEY_COUNT]{};                        // Used for keypad input
         uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT]{};       // Used to represent the display
@@ -51,11 +69,12 @@ class Chip8 {
 
 
         // Tables of pointers to opcodes
-        void (Chip8::*OpcodeTable[0xF + 1])();        
-        void (Chip8::*OpcodeTable_0[0xE + 1])();             
-        void (Chip8::*OpcodeTable_8[0xE + 1])();
-        void (Chip8::*OpcodeTable_E[0xE + 1])();
-        void (Chip8::*OpcodeTable_F[0x65 + 1])();
+        typedef void (Chip8::*opTable)();
+        opTable OpcodeTable[0xF + 1];
+        opTable OpcodeTable_0[0xE + 1];
+        opTable OpcodeTable_8[0xE + 1];
+        opTable OpcodeTable_E[0xE + 1];
+        opTable OpcodeTable_F[0x65 + 1];
     
 
         // Functions which execute opcodes

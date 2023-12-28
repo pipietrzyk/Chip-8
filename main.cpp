@@ -4,7 +4,7 @@
 #include "Chip8.hpp"
 #include "Chip8.cpp"
 
-void setKeys(SDL_KeyboardEvent *key, uint8_t val);
+void setKeys(const Uint8 *keystate);
 void drawGraphics(SDL_Renderer *renderer);
 
 Chip8 chip8;
@@ -20,9 +20,10 @@ int main (int argc, char **argv) {
         return 1;
     }
 
-    /*if (!chip8.loadROM(argv[1]))
-        return 1;*/
+    if (!chip8.loadROM(argv[1]))
+        return 1;
 
+    //chip8.debug(D_MEM_ROM);
 
     // Initialize SDL
 
@@ -47,8 +48,9 @@ int main (int argc, char **argv) {
     // TODO: SLOW DOWN EMULATION TO 60 CYCLES PER SECOND AND ALSO MAKE THE SOUND_TIMER PLAY A SOUND
     // Main emulator loop
     bool running = true;
+    int j = 0;
+    const Uint8 *keystate;
     while(running) {
-        //chip8.emulateCycle();
 
         // Handle events
         SDL_Event event;
@@ -58,18 +60,18 @@ int main (int argc, char **argv) {
                     running = false;
                     break;
 
-                case SDL_KEYDOWN :
-                    //setKeys(&event.key, 1);
-
-                case SDL_KEYUP :
-                    //setKeys(&event.key, 0);
-                    std::cout << SDL_GetKeyName( (&event.key)->keysym.sym ) << std::endl;
-
                 default :
                     break;
             }
         }
 
+        chip8.emulateCycle();
+        if (j < 50) {
+            chip8.debug(D_PC | D_OP);
+            j++;
+        }
+
+        setKeys(keystate);
         drawGraphics(renderer);
     }
     
@@ -78,63 +80,28 @@ int main (int argc, char **argv) {
 }
 
 
-
-
 // Set the keys that were pressed
-// TODO: PRESSING KEYS IS FUCKED!!!!!!!!!!!!!!!!!!
-void setKeys(SDL_KeyboardEvent *key, uint8_t val) {
-    switch (key->keysym.sym) {
-        case SDLK_0 :
-            chip8.keypad[0x0] = val;
+void setKeys(const Uint8 *keystate) {
+    keystate = SDL_GetKeyboardState(NULL);
+
+    chip8.keypad[0x0] = keystate[SDL_SCANCODE_0];
+    chip8.keypad[0x1] = keystate[SDL_SCANCODE_1];
+    chip8.keypad[0x2] = keystate[SDL_SCANCODE_2];
+    chip8.keypad[0x3] = keystate[SDL_SCANCODE_3];
+    chip8.keypad[0x4] = keystate[SDL_SCANCODE_4];
+    chip8.keypad[0x5] = keystate[SDL_SCANCODE_5];
+    chip8.keypad[0x6] = keystate[SDL_SCANCODE_6];
+    chip8.keypad[0x7] = keystate[SDL_SCANCODE_7];
+    chip8.keypad[0x8] = keystate[SDL_SCANCODE_8];
+    chip8.keypad[0x9] = keystate[SDL_SCANCODE_9];
+    chip8.keypad[0xA] = keystate[SDL_SCANCODE_A];
+    chip8.keypad[0xB] = keystate[SDL_SCANCODE_B];
+    chip8.keypad[0xC] = keystate[SDL_SCANCODE_C];
+    chip8.keypad[0xD] = keystate[SDL_SCANCODE_D];
+    chip8.keypad[0xE] = keystate[SDL_SCANCODE_E];
+    chip8.keypad[0xF] = keystate[SDL_SCANCODE_F];
         
-        case SDLK_1 :
-            chip8.keypad[0x1] = val;
-
-        case SDLK_2 :
-            chip8.keypad[0x2] = val;
-
-        case SDLK_3 :
-            chip8.keypad[0x3] = val;
-
-        case SDLK_4 :
-            chip8.keypad[0x4] = val;
-
-        case SDLK_5 :
-            chip8.keypad[0x5] = val;
-
-        case SDLK_6 :
-            chip8.keypad[0x6] = val;
-
-        case SDLK_7 :
-            chip8.keypad[0x7] = val;
-
-        case SDLK_8 :
-            chip8.keypad[0x8] = val;
-
-        case SDLK_9 :
-            chip8.keypad[0x9] = val;
-
-        case SDLK_a :
-            chip8.keypad[0xA] = val;
-
-        case SDLK_b :
-            chip8.keypad[0xB] = val;
-
-        case SDLK_c :
-            chip8.keypad[0xC] = val;
-
-        case SDLK_d :
-            chip8.keypad[0xD] = val;
-
-        case SDLK_e :
-            chip8.keypad[0xE] = val;
-
-        case SDLK_f :
-            chip8.keypad[0xF] = val;
-    }
 }
-
-
 
 
 // Draw each pixel to the screen
@@ -148,13 +115,13 @@ void drawGraphics(SDL_Renderer *renderer) {
     // Draw each white pixel
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     for (int i = 0; i < VIDEO_WIDTH * VIDEO_HEIGHT; i++) {
-        if (chip8.keypad[i]) {
+        if (chip8.video[i]) {
             int x = (i % VIDEO_WIDTH) * PIXEL_SCALE;
             int y = (i / VIDEO_WIDTH) * PIXEL_SCALE;
 
-            SDL_Rect r = {x, y, 10, 10};
-            SDL_RenderDrawRect(renderer, &r);
-            SDL_RenderFillRect(renderer, &r);
+            SDL_Rect rect = {x, y, 10, 10};
+            SDL_RenderDrawRect(renderer, &rect);
+            SDL_RenderFillRect(renderer, &rect);
         }
     }
 

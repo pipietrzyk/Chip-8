@@ -76,64 +76,64 @@ void Chip8::initialize() {
 
 
     // Set up function pointer table for opcodes
-    void (Chip8::*OpcodeTable[0xF + 1])() = {
-        &Chip8::GetTable0,
-        &Chip8::OP_1nnn,
-        &Chip8::OP_2nnn,
-        &Chip8::OP_3xkk,
-        &Chip8::OP_4xkk,
-        &Chip8::OP_5xy0,
-        &Chip8::OP_6xkk,
-        &Chip8::OP_7xkk,
-        &Chip8::GetTable8,
-        &Chip8::OP_9xy0,
-        &Chip8::OP_Annn,
-        &Chip8::OP_Bnnn,
-        &Chip8::OP_Cxkk,
-        &Chip8::OP_Dxyn,
-        &Chip8::GetTableE,
-        &Chip8::GetTableF
-    };
+        OpcodeTable[0x0] = &Chip8::GetTable0;
+        OpcodeTable[0x1] = &Chip8::OP_1nnn;
+        OpcodeTable[0x2] = &Chip8::OP_2nnn;
+        OpcodeTable[0x3] = &Chip8::OP_3xkk;
+        OpcodeTable[0x4] = &Chip8::OP_4xkk;
+        OpcodeTable[0x5] = &Chip8::OP_5xy0;
+        OpcodeTable[0x6] = &Chip8::OP_6xkk;
+        OpcodeTable[0x7] = &Chip8::OP_7xkk;
+        OpcodeTable[0x8] = &Chip8::GetTable8;
+        OpcodeTable[0x9] = &Chip8::OP_9xy0;
+        OpcodeTable[0xA] = &Chip8::OP_Annn;
+        OpcodeTable[0xB] = &Chip8::OP_Bnnn;
+        OpcodeTable[0xC] = &Chip8::OP_Cxkk;
+        OpcodeTable[0xD] = &Chip8::OP_Dxyn;
+        OpcodeTable[0xE] = &Chip8::GetTableE;
+        OpcodeTable[0xF] = &Chip8::GetTableF;
 
 
     // Initialize opcode tables 0, 8, and E with all NULL values
     for (int i = 0; i < 0xE + 1; i++) {
-        OpcodeTable_0[i] = OpcodeTable_8[i] = OpcodeTable_E[i] = Chip8::OP_NULL;
+        OpcodeTable_0[i] = &Chip8::OP_NULL;
+        OpcodeTable_8[i] = &Chip8::OP_NULL;
+        OpcodeTable_E[i] = &Chip8::OP_NULL;
     }
 
     // Fill the proper indices with their opcodes
-    OpcodeTable_0[0x0] = Chip8::OP_00E0;
-    OpcodeTable_0[0xE] = Chip8::OP_00EE;
+    OpcodeTable_0[0x0] = &Chip8::OP_00E0;
+    OpcodeTable_0[0xE] = &Chip8::OP_00EE;
 
-    OpcodeTable_8[0x0] = Chip8::OP_8xy0;
-    OpcodeTable_8[0x1] = Chip8::OP_8xy1;
-    OpcodeTable_8[0x2] = Chip8::OP_8xy2;
-    OpcodeTable_8[0x3] = Chip8::OP_8xy3;
-    OpcodeTable_8[0x4] = Chip8::OP_8xy4;
-    OpcodeTable_8[0x5] = Chip8::OP_8xy5;
-    OpcodeTable_8[0x6] = Chip8::OP_8xy6;
-    OpcodeTable_8[0x7] = Chip8::OP_8xy7;
-    OpcodeTable_8[0xE] = Chip8::OP_8xyE;
+    OpcodeTable_8[0x0] = &Chip8::OP_8xy0;
+    OpcodeTable_8[0x1] = &Chip8::OP_8xy1;
+    OpcodeTable_8[0x2] = &Chip8::OP_8xy2;
+    OpcodeTable_8[0x3] = &Chip8::OP_8xy3;
+    OpcodeTable_8[0x4] = &Chip8::OP_8xy4;
+    OpcodeTable_8[0x5] = &Chip8::OP_8xy5;
+    OpcodeTable_8[0x6] = &Chip8::OP_8xy6;
+    OpcodeTable_8[0x7] = &Chip8::OP_8xy7;
+    OpcodeTable_8[0xE] = &Chip8::OP_8xyE;
 
-    OpcodeTable_E[0xE] = Chip8::OP_Ex9E;
-    OpcodeTable_E[0x1] = Chip8::OP_ExA1;
+    OpcodeTable_E[0xE] = &Chip8::OP_Ex9E;
+    OpcodeTable_E[0x1] = &Chip8::OP_ExA1;
 
 
     // Initialize opcode table F with all NULL values
     for (int i = 0; i < 0x65 + 1; i++) {
-        OpcodeTable_F[i] = Chip8::OP_NULL;
+        OpcodeTable_F[i] = &Chip8::OP_NULL;
     }
 
     // Fill the proper indices with their opcodes
-    OpcodeTable_F[0x07] = Chip8::OP_Fx07;
-    OpcodeTable_F[0x0A] = Chip8::OP_Fx0A;
-    OpcodeTable_F[0x15] = Chip8::OP_Fx15;
-    OpcodeTable_F[0x18] = Chip8::OP_Fx18;
-    OpcodeTable_F[0x1E] = Chip8::OP_Fx1E;
-    OpcodeTable_F[0x29] = Chip8::OP_Fx29;
-    OpcodeTable_F[0x33] = Chip8::OP_Fx33;
-    OpcodeTable_F[0x55] = Chip8::OP_Fx55;
-    OpcodeTable_F[0x65] = Chip8::OP_Fx65;
+    OpcodeTable_F[0x07] = &Chip8::OP_Fx07;
+    OpcodeTable_F[0x0A] = &Chip8::OP_Fx0A;
+    OpcodeTable_F[0x15] = &Chip8::OP_Fx15;
+    OpcodeTable_F[0x18] = &Chip8::OP_Fx18;
+    OpcodeTable_F[0x1E] = &Chip8::OP_Fx1E;
+    OpcodeTable_F[0x29] = &Chip8::OP_Fx29;
+    OpcodeTable_F[0x33] = &Chip8::OP_Fx33;
+    OpcodeTable_F[0x55] = &Chip8::OP_Fx55;
+    OpcodeTable_F[0x65] = &Chip8::OP_Fx65;
 
     // Initialize seed for random number generator
     srand(time(NULL));
@@ -147,7 +147,7 @@ void Chip8::GetTable0() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_0 and call the function at the index
-    ((*this).*(OpcodeTable_0[index]))();
+    (this->*(OpcodeTable_0[index]))();
 }
 
 
@@ -156,7 +156,7 @@ void Chip8::GetTable8() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_8 and call the function at the index
-    ((*this).*(OpcodeTable_8[index]))();
+    (this->*(OpcodeTable_8[index]))();
 }
 
 
@@ -165,7 +165,7 @@ void Chip8::GetTableE() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_E and call the function at the index
-    ((*this).*(OpcodeTable_E[index]))();
+    (this->*(OpcodeTable_E[index]))();
 }
 
 
@@ -174,7 +174,7 @@ void Chip8::GetTableF() {
     int index = opcode & 0x00FF;
 
     // Dereference OpcodeTable_0 and call the function at the index
-    ((*this).*(OpcodeTable_0[index]))();
+    (this->*(OpcodeTable_0[index]))();
 }
 
 
@@ -182,7 +182,6 @@ void Chip8::GetTableF() {
 
 // Every cycle the CPU will fetch the opcode, decode the opcode, execute the opcode, and update timers
 void Chip8::emulateCycle() {
-    
     // Fetch Opcode
     opcode = (memory[pc] << 8) | memory[pc+1];      // Each opcode is 2 bytes long
                                                     // Need to merge the two halves in memory
@@ -190,18 +189,16 @@ void Chip8::emulateCycle() {
     pc += 2;
 
     // Decode and Execute Opcode
-    ((*this).*(OpcodeTable[(opcode & 0xF000) >> 12]))();
-
+    (this->*(OpcodeTable[(opcode & 0xF000) >> 12]))();
 
     // Update timers
     if (delay_timer) 
         delay_timer--;
     
     if (sound_timer) {
-        // PLAY BEEP
+        std::cout << "BEEP" << std::endl;
         sound_timer--;
     }
-
 }
 
 
@@ -239,67 +236,6 @@ bool Chip8::loadROM(const char *filename) {
 
     fclose(fp);
     return true;
-}
-
-
-
-
-void Chip8::debug() {
-    std::cout << "Delay timer value: " << std::dec << (int)delay_timer << std::endl;
-    std::cout << "Sound timer value: " << std::dec << (int)sound_timer << std::endl << std::endl;
-
-    std::cout << "Currently stored opcode: 0x" << std::setw(4) << std::setfill('0') << std::hex << opcode << std::endl << std::endl;
-
-    std::cout << "SP: " << std::dec << (int)sp << std::endl;
-    for (int i = 0; i < STACK_SIZE; i++) {
-        std::cout << "Address stored in stack level " << std::dec << i << ": 0x" << std::hex << (int)stack[i];
-        if (sp == i) {
-            std::cout << " << SP points here";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-
-    for (int i = 0; i < REGISTER_COUNT; i++) {
-        std::cout << "Data stored in V[" << std::hex << i << "]: 0x" << std::hex << (int)V[i] << std::endl;
-    }
-    std::cout << std::endl;
-
-    std::cout << "Address stored in I: 0x" << std::hex << I << std::endl;
-    std::cout << "Address stored in PC: 0x" << std::hex << pc << std::endl;
-    for (int i = 0; i < MEMORY_SIZE; i++) {
-        if (i == 0x200) 
-            std::cout << std::endl;
-
-        if (i == pc) {
-            std::cout << "Data stored in memory at index " << std::dec << i << " (memory address 0x" << std::setw(3) << std::setfill('0') << std::hex << i << "): 0x" << (int)memory[i] << "\t<< PC points here" << std::endl;
-        } else if (i == I) {
-            std::cout << "Data stored in memory at index " << std::dec << i << " (memory address 0x" << std::setw(3) << std::setfill('0') << std::hex << i << "): 0x" << (int)memory[i] << "\t<< Address stored in I points here" << std::endl;
-        } else if (memory[i]) { 
-            std::cout << "Data stored in memory at index " << std::dec << i << " (memory address 0x" << std::setw(3) << std::setfill('0') << std::hex << i << "): 0x" << (int)memory[i] << std::endl;
-        }
-    }
-    std::cout << std::endl;
-
-    std::cout << "Keys pressed: " << std::endl;
-    for (int i = 0; i < KEY_COUNT; i++) {
-        if (keypad[i])
-            std::cout << std::hex << i << std::endl;
-    }
-    std::cout << std::endl;
-
-    std::cout << "VIDEO: ";
-    for (int i = 0; i < VIDEO_WIDTH * VIDEO_HEIGHT; i++) {
-        if (i % VIDEO_WIDTH == 0)
-            std::cout << std::endl;
-        
-        if (video[i]) {
-            std::cout << "1";
-        } else {
-            std::cout << "*";
-        }
-    }
-    std::cout << std::endl << "------------------------------------------------------------------------------------------------" <<  std::endl << std::endl;
 }
 
 
@@ -584,7 +520,7 @@ void Chip8::OP_Fx0A() {
     for (int i = 0; i < KEY_COUNT; i++) {
         if (keypad[i]) {
             V[x] = i;
-            break;
+            return;
         }  
     }
 
@@ -650,4 +586,139 @@ void Chip8::OP_Fx65() {
     for (int i = 0; i <= x; i++) {
         V[i] = memory[I + i];
     }
+}
+
+
+
+
+// Arguments (bitwise OR'd together):
+// D_OP | D_PC | D_MEM_ALL | D_MEM_FONTS | D_MEM_ROM | D_SP | D_STACK | D_I | D_V | D_VID | D_KEYS | D_DT | D_ST | D_ALL
+void Chip8::debug(uint16_t bitmask) {
+    uint16_t d_op = bitmask & 0x1000;        
+    uint16_t d_pc = bitmask & 0x800;        
+    uint16_t d_mem_all = bitmask & 0x400;       
+    uint16_t d_sp = bitmask & 0x200;       
+    uint16_t d_stack = bitmask & 0x100;     
+    uint16_t d_I = bitmask & 0x80;          
+    uint16_t d_V = bitmask & 0x40;          
+    uint16_t d_video = bitmask & 0x20;
+    uint16_t d_keys = bitmask & 0x10;        
+    uint16_t d_dt = bitmask & 0x8;          
+    uint16_t d_st = bitmask & 0x4;          
+    uint16_t d_mem_fonts = bitmask & 0x2;
+    uint16_t d_mem_rom = bitmask & 0x1;
+
+
+    if (d_dt) {
+        std::cout << "Delay timer value: " << std::dec << delay_timer << std::endl << std::endl;
+    }
+
+    if (d_st) {
+        std::cout << "Sound timer value: " << std::dec << sound_timer << std::endl << std::endl;
+    }
+
+
+    if (d_keys) {
+        std::cout << "Keys currently pressed: " << std::endl;
+        for (int i = 0; i < KEY_COUNT; i++) {
+            if (keypad[i])
+                std::cout << std::hex << i << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
+
+    if (d_V) {
+        for(int i = 0; i < REGISTER_COUNT; i++) {
+            std::cout << "Value stored in V[0x" << std::hex << i << "]: " << std::hex << std::setw(2) << std::setfill('0') << (int)V[i] << std::endl;
+        }
+        std::cout << std::endl;
+    }   
+
+
+    if (d_stack) {
+        std::cout << "SP points to stack level " << std::dec << sp << std::endl;
+        for(int i = 0; i < STACK_SIZE; i++) {
+            if (sp == i) {
+                std::cout << "Stack level " << std::dec << i << " points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)stack[sp] << std::endl;
+            } else {
+                std::cout << "Stack level " << std::dec << i << " points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)stack[sp] << "\t<< SP points here" << std::endl;
+            }
+        }
+        std::cout << std::endl;
+    } else if (d_sp) {
+        std::cout << "SP points to stack level " << std::dec << sp << std::endl << std::endl;
+    }
+
+
+    if (d_op) 
+        std::cout << "Current opcode: " << std::hex << std::setw(4) << std::setfill('0') << (int)opcode << std::endl << std::endl;
+
+
+    if (d_mem_all) {
+        for (int i = 0; i < MEMORY_SIZE; i++) {
+            if (memory[i]) {
+                std::cout << "Value at memory index " << std::dec << (int)i << " (memory address 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)i << "): 0x" 
+                << std::hex << std::setw(2) << std::setfill('0') << (int)memory[i];
+                if (pc == i)
+                    std::cout << "\t<< PC points here";
+                if (I == i)
+                    std::cout << "\t<< I points here";
+                std::cout << std::endl;
+            }
+        }
+        std::cout << std::endl;
+    } else if (d_mem_fonts) {
+        for (int i = 0; i < 0x1FF; i++) {
+            if (memory[i]) {
+                    std::cout << "Value at memory index " << std::dec << (int)i << " (memory address 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)i << "): 0x" 
+                    << std::hex << std::setw(2) << std::setfill('0') << (int)memory[i];
+                if (pc == i)
+                    std::cout << "\t<< PC points here";
+                if (I == i)
+                    std::cout << "\t<< I points here";
+                std::cout << std::endl;
+            }
+        }
+        std::cout << std::endl;
+    } else if (d_mem_rom) {
+        for (int i = 0x200; i < MEMORY_SIZE; i++) {
+            if (memory[i]) {
+                std::cout << "Value at memory index " << std::dec << (int)i << " (memory address 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)i << "): 0x" 
+                << std::hex << std::setw(2) << std::setfill('0') << (int)memory[i];
+                if (pc == i)
+                    std::cout << "\t<< PC points here";
+                if (I == i)
+                    std::cout << "\t<< I points here";
+                std::cout << std::endl;
+            }
+        }
+        std::cout << std::endl;
+        
+    } else if (d_pc && d_I) {
+        std::cout << "PC points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)pc << std::endl;
+        std::cout << "I points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)I << std::endl;
+    } else if (d_pc) {
+        std::cout << "PC points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)pc << std::endl << std::endl;
+    } else if (d_I) {
+        std::cout << "I points to: 0x" << std::hex << std::setw(3) << std::setfill('0') << (int)I << std::endl << std::endl;
+    }    
+
+
+    if (d_video) {
+        std::cout << "VIDEO: " << std::endl;
+        for (int i = 0; i < VIDEO_WIDTH * VIDEO_HEIGHT; i++) {
+            if (i % VIDEO_WIDTH == 0) 
+                std::cout << std::endl;
+
+            if (video[i]) {
+                std::cout << "1";
+            } else {
+                std::cout << "0";
+            }
+        }
+        std::cout << std::endl;
+    }
+    
+    std::cout << "------------------------------------------------------------------------------------------------" << std::endl << std::endl;
 }
