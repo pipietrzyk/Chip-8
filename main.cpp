@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "Chip8.hpp"
 #include "Chip8.cpp"
+//https://github.com/Timendus/chip8-test-suite
 
 void setKeys(const Uint8 *keystate);
 void drawGraphics(SDL_Renderer *renderer);
@@ -67,7 +68,8 @@ int main (int argc, char **argv) {
 
         chip8.emulateCycle();
         if (j < 50) {
-            chip8.debug(D_PC | D_OP);
+            //chip8.debug(D_PC | D_OP);
+            //chip8.debug(D_VID);
             j++;
         }
 
