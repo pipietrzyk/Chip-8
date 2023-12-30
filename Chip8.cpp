@@ -39,6 +39,8 @@ Chip8::Chip8() {
 
 // Initializes the registers and memory
 void Chip8::initialize() {
+    drawFlag = true;
+
     pc = PROGRAM_START_ADDRES;          // 0x200 is where Chip8 programs start
                                         // 0x000 to 0x1FF are where the original interpreter was located and should not be used
 
@@ -76,7 +78,7 @@ void Chip8::initialize() {
 
 
     // Set up function pointer table for opcodes
-        OpcodeTable[0x0] = &Chip8::GetTable0;
+        OpcodeTable[0x0] = &Chip8::getTable0;
         OpcodeTable[0x1] = &Chip8::OP_1nnn;
         OpcodeTable[0x2] = &Chip8::OP_2nnn;
         OpcodeTable[0x3] = &Chip8::OP_3xkk;
@@ -84,14 +86,14 @@ void Chip8::initialize() {
         OpcodeTable[0x5] = &Chip8::OP_5xy0;
         OpcodeTable[0x6] = &Chip8::OP_6xkk;
         OpcodeTable[0x7] = &Chip8::OP_7xkk;
-        OpcodeTable[0x8] = &Chip8::GetTable8;
+        OpcodeTable[0x8] = &Chip8::getTable8;
         OpcodeTable[0x9] = &Chip8::OP_9xy0;
         OpcodeTable[0xA] = &Chip8::OP_Annn;
         OpcodeTable[0xB] = &Chip8::OP_Bnnn;
         OpcodeTable[0xC] = &Chip8::OP_Cxkk;
         OpcodeTable[0xD] = &Chip8::OP_Dxyn;
-        OpcodeTable[0xE] = &Chip8::GetTableE;
-        OpcodeTable[0xF] = &Chip8::GetTableF;
+        OpcodeTable[0xE] = &Chip8::getTableE;
+        OpcodeTable[0xF] = &Chip8::getTableF;
 
 
     // Initialize opcode tables 0, 8, and E with all NULL values
@@ -143,7 +145,7 @@ void Chip8::initialize() {
 
 
 // Index into OpcodeTable_0 based on the last hex digit of the opcode
-void Chip8::GetTable0() {
+void Chip8::getTable0() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_0 and call the function at the index
@@ -152,7 +154,7 @@ void Chip8::GetTable0() {
 
 
 // Index into OpcodeTable_8 based on the last hex digit of the opcode
-void Chip8::GetTable8() {
+void Chip8::getTable8() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_8 and call the function at the index
@@ -161,7 +163,7 @@ void Chip8::GetTable8() {
 
 
 // Index into OpcodeTable_E based on the last hex digit of the opcode
-void Chip8::GetTableE() {
+void Chip8::getTableE() {
     int index = opcode & 0x000F;
 
     // Dereference OpcodeTable_E and call the function at the index
@@ -170,7 +172,7 @@ void Chip8::GetTableE() {
 
 
 // Index into OpcodeTable_F based on the last two hex digits of the opcode
-void Chip8::GetTableF() {
+void Chip8::getTableF() {
     int index = opcode & 0x00FF;
 
     // Dereference OpcodeTable_0 and call the function at the index
@@ -190,8 +192,13 @@ void Chip8::emulateCycle() {
 
     // Decode and Execute Opcode
     (this->*(OpcodeTable[(opcode & 0xF000) >> 12]))();
+}
 
-    // Update timers
+
+
+
+// Updates the delay timer and sound timer and plays a tone while the sound timer is > 0
+void Chip8::updateTimers() {
     if (delay_timer) 
         delay_timer--;
     
@@ -246,6 +253,8 @@ void Chip8::OP_NULL(){}
 
 // Clear the display
 void Chip8::OP_00E0() {
+    drawFlag = true;
+
     for (int i = 0; i < VIDEO_WIDTH * VIDEO_HEIGHT; i++) {       
         video[i] = 0;
     }
@@ -448,7 +457,10 @@ void Chip8::OP_Cxkk() {
 // Sprites are XOR'd onto the screen - if this causes sprites to be erased set VF = 1, otherwise VF = 0
 // Sprites wrap around the edges of the screen
 // A sprite is a group of bytes which are a binary representation of the desired picture - Chip-8 sprites may be up to 15 bytes, for a possible sprite size of 8x15
+// TODO: MAYBE IT HAS TO NOT WRAP?
 void Chip8::OP_Dxyn() {
+    drawFlag = true;
+
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
     uint8_t n = (opcode & 0x000F);
@@ -544,12 +556,11 @@ void Chip8::OP_Fx18() {
 // I = I + Vx
 void Chip8::OP_Fx1E() {
     uint8_t x = (opcode & 0x0F00) >> 8;
-
+    
     I += V[x];
 }
 
 // Set I = location of the sprite for digit stored in Vx
-// 0-F represented as 0-15 in register
 void Chip8::OP_Fx29() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 
@@ -579,7 +590,7 @@ void Chip8::OP_Fx55() {
     }
 }
 
-// Read registers V0 through Vx from memory starting at location I
+// Load registers V0 through Vx from memory starting at location I
 void Chip8::OP_Fx65() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 

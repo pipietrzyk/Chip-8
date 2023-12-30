@@ -28,6 +28,10 @@ int main (int argc, char **argv) {
 
     const int INSTRUCTIONS_PER_SECOND = std::stoi(argv[2]);
 
+    // Output memory status upon loading ROM
+    std::cout << "ROM IN MEMORY" << std::endl;
+    chip8.debug(D_MEM_ROM);
+
 
     // Initialize SDL
 
@@ -58,6 +62,15 @@ int main (int argc, char **argv) {
     const Uint8 *keystate;
     bool running = true;
     while(running) {
+        int c;
+        std::cout << "Type 1 to run one cycle of the CPU | Type 2 to output the ROM in memory | Type 0 to quit): ";
+        std::cin >> c;
+        if (c == 0) {
+            break;
+        } else if (c == 2) {
+            chip8.debug(D_MEM_ROM);
+        }
+        chip8.debug(D_OP | D_I | D_PC | D_V);
 
         // Handle events
         SDL_Event event;
