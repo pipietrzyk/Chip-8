@@ -176,7 +176,7 @@ void Chip8::getTableF() {
     int index = opcode & 0x00FF;
 
     // Dereference OpcodeTable_0 and call the function at the index
-    (this->*(OpcodeTable_0[index]))();
+    (this->*(OpcodeTable_F[index]))();
 }
 
 
@@ -333,94 +333,108 @@ void Chip8::OP_8xy0() {
 }
 
 // Set Vx = Vx OR Vy
+// Also resets VF
 void Chip8::OP_8xy1() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
 
     V[x] = V[x] | V[y];
+    V[0xF] = 0;
 }
 
 // Set Vx = Vx AND Vy
+// Also resets VF
 void Chip8::OP_8xy2() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
 
     V[x] = V[x] & V[y];
+    V[0xF] = 0;
 }
 
 // Set Vx = Vx XOR Vy
+// Also resets VF
 void Chip8::OP_8xy3() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
 
     V[x] = V[x] ^ V[y];
+    V[0xF] = 0;
 }
 
 // Set Vx = Vx + Vy 
 // If the result is greater than 8 bits (>255) set VF = 1, otherwise VF = 0
 // Only the 8 lowest bits are stored in Vx
+// VF can also be either Vx or Vy
 void Chip8::OP_8xy4() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
 
-    V[0xF] = 0;
-
     uint16_t sum = V[x] + V[y];
-
-    if (sum > 255)
-        V[0xF] = 1;
-
     V[x] = sum & 0xFF;
+
+    if (sum > 255) {
+        V[0xF] = 1;
+    } else {
+        V[0xF] = 0;
+    }
 }
 
 // Set Vx = Vx - Vy
 // If Vx > Vy, set VF to 1, otherwise VF = 0
+// VF can also be either Vx or Vy
 void Chip8::OP_8xy5() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
+    uint8_t val = V[x];
 
-    V[0xF] = 0;
-
-    if (V[x] > V[y])
+    V[x] = val - V[y];
+    if (val >= V[y]) {
         V[0xF] = 1;
-
-    V[x] -= V[y];
+    } else {
+        V[0xF] = 0;
+    }
 }
 
 // If the least significant bit of Vx is 1, VF = 1, otherwise VF = 0
 // Divide Vx by 2
+// This variation of the opcode doesn't actually use Vy
+// VF can also be either Vx or Vy
 void Chip8::OP_8xy6() {
     uint8_t x = (opcode & 0x0F00) >> 8;
-    uint8_t y = (opcode & 0x00F0) >> 4;
-
-    V[0xF] = V[x] & 0x1;    // LSB gets saved in VF
+    uint8_t lsb = V[x] & 0x1;
 
     V[x] = V[x] >> 1;
+    V[0xF] = lsb;
 }
 
 // Set Vx = Vy - Vx
 // If Vy > Vx, set VF to 1, otherwise VF = 0
+// VF can also be either Vx or Vy
 void Chip8::OP_8xy7() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
-
-    V[0xF] = 0;
-
-    if (V[y] > V[x])
-        V[0xF] = 1;
+    uint8_t val = V[x];
 
     V[x] = V[y] - V[x];
+    if (V[y] >= val) {
+        V[0xF] = 1;
+    } else {
+        V[0xF] = 0;
+    }
 }
 
 // If the most significant bit of Vx is 1, VF = 1, otherwise VF = 0
 // Multiply Vx by 2
+// This variation of the opcode doesn't actually use Vy
+// VF can also be either Vx or Vy
 void Chip8::OP_8xyE() {
     uint8_t x = (opcode & 0x0F00) >> 8;
-    uint8_t y = (opcode & 0x00F0) >> 4;
+    uint8_t msb = (V[x] & 0x80) >> 7;
+    uint16_t val = V[x] << 1;
 
-    V[0xF] = V[x] & 0x80;    // MSB gets saved in VF
-
-    V[x] = V[x] << 1;
+    V[x] = val & 0x01FE;
+    V[0xF] = msb;
 }
 
 // Skip next instruction if Vx != Vy
@@ -455,18 +469,17 @@ void Chip8::OP_Cxkk() {
 // Read n bytes of memory starting at the address stored in I
 // Display these bytes as sprites on the screen at coordinates (Vx, Vy)
 // Sprites are XOR'd onto the screen - if this causes sprites to be erased set VF = 1, otherwise VF = 0
-// Sprites wrap around the edges of the screen
+// Sprites do not wrap around the edges of the screen - if they reach the edges they are clipped and cut off
 // A sprite is a group of bytes which are a binary representation of the desired picture - Chip-8 sprites may be up to 15 bytes, for a possible sprite size of 8x15
-// TODO: MAYBE IT HAS TO NOT WRAP?
 void Chip8::OP_Dxyn() {
     drawFlag = true;
 
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
     uint8_t n = (opcode & 0x000F);
-    uint16_t vidx = (VIDEO_WIDTH * V[y]) + V[x];     // Index into the video buffer
-    uint16_t start_vidx = vidx;                      // Keeps track of what index the sprite will start being drawn from in each row
-    uint16_t w_vidx = VIDEO_WIDTH * V[y];            // If the sprite needs to be wrapped around the edge of the screen then the wrapped index will be stored here
+    uint16_t vidx = (VIDEO_WIDTH * V[y]) + V[x];                // Index into the video buffer
+    uint16_t start_vidx = vidx;                                 // Keeps track of what index the sprite will start being drawn from in each row
+    uint16_t end_vidx = (VIDEO_WIDTH * V[y]) + VIDEO_WIDTH-1;   // Keeps track of what index the end of each row is at in case the sprite is clipped
 
     V[0xF] = 0;
     for (int i = 0; i < n; i++) {
@@ -474,8 +487,8 @@ void Chip8::OP_Dxyn() {
         // Draw one row of bits
         uint8_t bit = 0x80;                                     // Used to check if a particular bit needs to be drawn, starts at 0b10000000 (0x80) and ends at 0b00000001 (0x01)
         for (int j = 0; j < 8; j++) {
-            if (vidx >= w_vidx + VIDEO_WIDTH) {                 // If vidx goes too far and instead must be wrapped around the screen
-                vidx = w_vidx;                                  // Store the wrapped index in vidx
+            if (vidx > end_vidx) {                              // If vidx goes too far and clips past the edge of the screen
+                break;                                          // Stop and go to the next row
             }
 
             if ((memory[I + i] & bit) && video[vidx]) {         // If a pixel was already here -AND- new pixel is being drawn here:
@@ -493,12 +506,11 @@ void Chip8::OP_Dxyn() {
         vidx = start_vidx;                                      // Reset vidx to its starting position to make it easier to calculate the start position for the next row
 
         vidx += VIDEO_WIDTH;                                    // Go to the next row in the video buffer
-        w_vidx += VIDEO_WIDTH;                                  // Go to next row for the wrapped index as well
-        if (vidx >= VIDEO_WIDTH * VIDEO_HEIGHT) {               // Wrap around to the top of the screen if required to do so
-            vidx = V[x];
-            w_vidx = 0;
+        start_vidx += VIDEO_WIDTH;                              // Set start_vidx to the start of the next row
+        end_vidx += VIDEO_WIDTH;                                // Set end_vidx to the end of the next row       
+        if (vidx >= VIDEO_WIDTH * VIDEO_HEIGHT) {               // If the sprite reaches the bottom of the screen, stop drawing
+            break;
         }
-        start_vidx = vidx;
     }
 }
 
@@ -582,20 +594,24 @@ void Chip8::OP_Fx33() {
 }
 
 // Store registers V0 through Vx in memory starting at location I
+// I is incremented in the COSMAC variant
 void Chip8::OP_Fx55() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 
     for (int i = 0; i <= x; i++) {
-        memory[I + i] = V[i];
+        memory[I] = V[i];
+        I++;
     }
 }
 
 // Load registers V0 through Vx from memory starting at location I
+// I is incremented in the COSMAC variant
 void Chip8::OP_Fx65() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 
     for (int i = 0; i <= x; i++) {
-        V[i] = memory[I + i];
+        V[i] = memory[I];
+        I++;
     }
 }
 
@@ -663,7 +679,7 @@ void Chip8::debug(uint16_t bitmask) {
 
 
     if (d_op) 
-        std::cout << "Current opcode: " << std::hex << std::setw(4) << std::setfill('0') << (int)opcode << std::endl << std::endl;
+        std::cout << "Latest opcode executed: " << std::hex << std::setw(4) << std::setfill('0') << (int)opcode << std::endl << std::endl;
 
 
     if (d_mem_all) {
