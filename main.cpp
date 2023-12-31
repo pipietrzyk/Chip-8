@@ -28,6 +28,7 @@ int main (int argc, char **argv) {
 
     const int INSTRUCTIONS_PER_SECOND = std::stoi(argv[2]);
 
+    //chip8.debug(D_MEM_ROM);
 
     // Initialize SDL
 
@@ -72,6 +73,8 @@ int main (int argc, char **argv) {
             }
         }
 
+        setKeys(keystate);
+
         // CPU delay is configurable based on the ROM being used, every (1 / INSTRUCTIONS_PER_SECOND) of a second run emulateCycle()
         auto cpuCurrent = std::chrono::high_resolution_clock::now();
         float cpuDiff = std::chrono::duration<float, std::chrono::seconds::period>(cpuCurrent - cpuStart).count();
@@ -88,12 +91,11 @@ int main (int argc, char **argv) {
             chip8.updateTimers();
         }
 
-        setKeys(keystate);
-
         if (chip8.drawFlag) {
             drawGraphics(renderer);
             chip8.drawFlag = false;
         }
+
     }
     
     SDL_Quit();

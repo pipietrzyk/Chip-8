@@ -470,6 +470,7 @@ void Chip8::OP_Cxkk() {
 // Display these bytes as sprites on the screen at coordinates (Vx, Vy)
 // Sprites are XOR'd onto the screen - if this causes sprites to be erased set VF = 1, otherwise VF = 0
 // Sprites do not wrap around the edges of the screen - if they reach the edges they are clipped and cut off
+// Coordinates wrap, so if x > 63 or y > 32, then x = x % 64 or y = y % 32, respectively
 // A sprite is a group of bytes which are a binary representation of the desired picture - Chip-8 sprites may be up to 15 bytes, for a possible sprite size of 8x15
 void Chip8::OP_Dxyn() {
     drawFlag = true;
@@ -477,6 +478,11 @@ void Chip8::OP_Dxyn() {
     uint8_t x = (opcode & 0x0F00) >> 8;
     uint8_t y = (opcode & 0x00F0) >> 4;
     uint8_t n = (opcode & 0x000F);
+    if (V[x] > 63)
+        V[x] = V[x] % 64;
+    if (V[y] > 31)
+        V[y] = V[y] % 32;
+
     uint16_t vidx = (VIDEO_WIDTH * V[y]) + V[x];                // Index into the video buffer
     uint16_t start_vidx = vidx;                                 // Keeps track of what index the sprite will start being drawn from in each row
     uint16_t end_vidx = (VIDEO_WIDTH * V[y]) + VIDEO_WIDTH-1;   // Keeps track of what index the end of each row is at in case the sprite is clipped
@@ -519,7 +525,7 @@ void Chip8::OP_Ex9E() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 
     if (keypad[V[x]])
-        pc =+ 2;  
+        pc += 2;  
 }
 
 // Skip next instruction if a key with the value of Vx is NOT pressed 
@@ -527,7 +533,7 @@ void Chip8::OP_ExA1() {
     uint8_t x = (opcode & 0x0F00) >> 8;
 
     if (!keypad[V[x]])
-        pc =+ 2;  
+        pc += 2;  
 }
 
 // Vx = delay_timer
